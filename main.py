@@ -56,15 +56,3 @@ async def serve_frontend():
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok", "service": "grabpic"}
-
-@app.get("/debug/redis")
-async def debug_redis():
-    import app.redis_client as redis_store
-    client = redis_store.redis_client
-    if client is None:
-        return {"status": "client is None"}
-    try:
-        pong = await client.ping()
-        return {"status": "ok", "ping": pong}
-    except Exception as e:
-        return {"status": "error", "detail": str(e)}

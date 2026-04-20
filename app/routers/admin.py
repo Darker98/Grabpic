@@ -5,6 +5,8 @@ from uuid import UUID, uuid4
 from PIL import Image
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Header, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from app.config import settings
 from app.database import get_session
 from app.models.image import Image as ImageModel
@@ -14,8 +16,9 @@ from app.schemas.upload import UploadResponse
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
-    
+
 async def _validate_upload_file(file: UploadFile) -> tuple[bytes, str, str]:
     content = await file.read()
     if len(content) > 20 * 1024 * 1024:
@@ -38,6 +41,7 @@ async def _validate_upload_file(file: UploadFile) -> tuple[bytes, str, str]:
 
 
 @router.post("/upload", response_model=UploadResponse, status_code=status.HTTP_202_ACCEPTED)
+@limiter.limit("10/10minutes")
 async def upload_images(
     images: list[UploadFile] = File(...),
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
