@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grabpic — Facial Recognition Photo Retrieval</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #ffffff;
+            font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        h1, h2, h3, label, .label {
+            font-family: "DM Mono", monospace;
+            font-weight: 500;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .header {
+            margin-bottom: 32px;
+        }
+
+        .wordmark {
+            font-family: "DM Mono", monospace;
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            margin-bottom: 24px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .tab {
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            color: #999;
+            font-family: "DM Sans", sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 300ms ease;
+            position: relative;
+        }
+
+        .tab:hover {
+            color: #ccc;
+        }
+
+        .tab.active {
+            color: #ffffff;
+        }
+
+        .tab.active::after {
+            content: "";
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e8ff47;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 300ms ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .error-banner {
+            background: #2a1a1a;
+            border: 1px solid #661a1a;
+            color: #ff9999;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .error-banner.show {
+            display: block;
+        }
+
+        .success-banner {
+            background: #1a2a1a;
+            border: 1px solid #1a6600;
+            color: #99ff99;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .success-banner.show {
+            display: block;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #aaa;
+        }
+
+        input[type="password"],
+        input[type="text"],
+        input[type="file"] {
+            background: #111111;
+            border: 1px solid #222;
+            color: #ffffff;
+            padding: 10px 12px;
+            font-family: "DM Sans", sans-serif;
+            font-size: 14px;
+            width: 100%;
+            margin-bottom: 16px;
+            transition: border-color 300ms ease;
+        }
+
+        input[type="password"]:focus,
+        input[type="text"]:focus,
+        input[type="file"]:focus {
+            outline: none;
+            border-color: #e8ff47;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .dropzone {
+            border: 1px dashed #333;
+            border-radius: 2px;
+            padding: 32px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 300ms ease;
+            background: #111111;
+            margin-bottom: 16px;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dropzone:hover {
+            border-color: #e8ff47;
+            background: #1a1a1a;
+        }
+
+        .dropzone.dragover {
+            border-color: #e8ff47;
+            background: #1a1a1a;
+        }
+
+        .dropzone-text {
+            color: #aaa;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .dropzone-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: #666;
+        }
+
+        .file-list {
+            background: #111111;
+            border: 1px solid #222;
+            border-radius: 2px;
+            padding: 12px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .file-list.show {
+            display: block;
+        }
+
+        .file-item {
+            padding: 6px 0;
+            font-size: 12px;
+            color: #ccc;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-item-name {
+            color: #e8ff47;
+            word-break: break-all;
+        }
+
+        button {
+            background: #e8ff47;
+            color: #000000;
+            border: none;
+            padding: 12px 24px;
+            font-family: "DM Mono", monospace;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 300ms ease;
+            border-radius: 2px;
+        }
+
+        button:hover {
+            background: #f0ff5c;
+        }
+
+        button:disabled {
+            background: #666;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        button.secondary {
+            background: transparent;
+            color: #e8ff47;
+            border: 1px solid #e8ff47;
+        }
+
+        button.secondary:hover {
+            background: rgba(232, 255, 71, 0.1);
+        }
+
+        button.secondary:disabled {
+            background: transparent;
+            border-color: #666;
+            color: #666;
+        }
+
+        .gallery {
+            margin-top: 24px;
+        }
+
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .match-info {
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .match-info strong {
+            color: #e8ff47;
+        }
+
+        .search-again {
+            font-size: 12px;
+            color: #e8ff47;
+            cursor: pointer;
+            text-decoration: none;
+            transition: color 300ms ease;
+        }
+
+        .search-again:hover {
+            color: #f0ff5c;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .image-card {
+            background: #111111;
+            border: 1px solid #222;
+            border-radius: 2px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 300ms ease;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .image-card:hover {
+            border-color: #e8ff47;
+            background: #1a1a1a;
+        }
+
+        .image-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-card-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 12px;
+            font-size: 11px;
+            color: #aaa;
+            opacity: 0;
+            transition: opacity 300ms ease;
+        }
+
+        .image-card:hover .image-card-overlay {
+            opacity: 1;
+        }
+
+        .gallery-count {
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 16px;
+        }
+
+        .gallery-count strong {
+            color: #e8ff47;
+        }
+
+        .load-more-container {
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .preview-container {
+            background: #111111;
+            border: 1px solid #222;
+            border-radius: 2px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: none;
+            text-align: center;
+            max-height: 400px;
+            overflow: hidden;
+        }
+
+        .preview-container.show {
+            display: block;
+        }
+
+        .preview-container img {
+            max-width: 100%;
+            max-height: 360px;
+            border-radius: 2px;
+        }
+
+        .field-group {
+            margin-bottom: 16px;
+        }
+
+        .breadcrumb {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+
+        .breadcrumb a {
+            color: #e8ff47;
+            cursor: pointer;
+            text-decoration: none;
+            transition: color 300ms ease;
+        }
+
+        .breadcrumb a:hover {
+            color: #f0ff5c;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            background: currentColor;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .image-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .image-grid {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                padding: 16px;
+            }
+            .tabs {
+                gap: 0;
+            }
+            .tab {
+                flex: 1;
+                text-align: center;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!--
+        CORS SETUP REMINDER:
+        Add this to main.py to enable local frontend development:
+
+        from fastapi.middleware.cors import CORSMiddleware
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+    -->
+
+    <div class="container">
+        <div class="header">
+            <div class="wordmark">Grabpic</div>
+            <div class="tabs">
+                <button class="tab active" data-tab="admin">Admin</button>
+                <button class="tab" data-tab="user">Find my photos</button>
+            </div>
+        </div>
+
+        <!-- ADMIN TAB -->
+        <div id="admin" class="tab-content active">
+            <div class="error-banner" id="admin-error"></div>
+            <div class="success-banner" id="admin-success"></div>
+
+            <div class="section">
+                <div class="field-group">
+                    <label for="admin-key">Admin key</label>
+                    <input type="password" id="admin-key" placeholder="Admin key">
+                </div>
+
+                <div class="field-group">
+                    <label>Images</label>
+                    <div class="dropzone" id="admin-dropzone">
+                        <div class="dropzone-icon">📁</div>
+                        <div class="dropzone-text">Drag images here or click to browse</div>
+                        <div style="font-size: 11px; color: #666; margin-top: 8px;">JPEG or PNG, max 20MB each</div>
+                    </div>
+                    <input type="file" id="admin-file-input" accept="image/jpeg,image/png" multiple>
+                </div>
+
+                <div class="file-list" id="admin-file-list">
+                    <div id="admin-file-items"></div>
+                </div>
+
+                <button id="admin-upload-btn">Upload</button>
+            </div>
+        </div>
+
+        <!-- USER TAB -->
+        <div id="user" class="tab-content">
+            <div class="error-banner" id="user-error"></div>
+            <div class="success-banner" id="user-success"></div>
+
+            <!-- STEP 1: SELFIE UPLOAD -->
+            <div id="step-1" class="section">
+                <div class="field-group">
+                    <label>Your selfie</label>
+                    <div class="dropzone" id="user-dropzone">
+                        <div class="dropzone-icon">📸</div>
+                        <div class="dropzone-text">Drag your selfie here or click to browse</div>
+                        <div style="font-size: 11px; color: #666; margin-top: 8px;">Clear, front-facing photo (JPEG or PNG)</div>
+                    </div>
+                    <input type="file" id="user-file-input" accept="image/jpeg,image/png">
+                </div>
+
+                <div class="preview-container" id="user-preview-container">
+                    <img id="user-preview-img" alt="Selfie preview">
+                </div>
+
+                <button id="user-find-btn" disabled>Find my photos</button>
+            </div>
+
+            <!-- STEP 2: PHOTO GALLERY -->
+            <div id="step-2" class="section" style="display: none;">
+                <div class="breadcrumb">
+                    <a id="search-again-link">← Search again</a>
+                </div>
+
+                <div class="gallery-header">
+                    <div class="match-info">
+                        Match confidence: <strong id="match-confidence">-</strong>
+                    </div>
+                </div>
+
+                <div class="gallery-count">
+                    <strong id="image-total">0</strong> photos found
+                </div>
+
+                <div class="image-grid" id="image-grid"></div>
+
+                <div class="load-more-container">
+                    <button id="load-more-btn" class="secondary" style="display: none;">Load more</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:8000";
+        
+        // State
+        let adminFiles = [];
+        let userFile = null;
+        let userToken = null;
+        let currentPage = 1;
+        let totalImages = 0;
+        let matchConfidence = 0;
+
+        // DOM Elements
+        const adminKeyInput = document.getElementById("admin-key");
+        const adminDropzone = document.getElementById("admin-dropzone");
+        const adminFileInput = document.getElementById("admin-file-input");
+        const adminFileList = document.getElementById("admin-file-list");
+        const adminFileItems = document.getElementById("admin-file-items");
+        const adminUploadBtn = document.getElementById("admin-upload-btn");
+        const adminError = document.getElementById("admin-error");
+        const adminSuccess = document.getElementById("admin-success");
+
+        const userDropzone = document.getElementById("user-dropzone");
+        const userFileInput = document.getElementById("user-file-input");
+        const userPreviewContainer = document.getElementById("user-preview-container");
+        const userPreviewImg = document.getElementById("user-preview-img");
+        const userFindBtn = document.getElementById("user-find-btn");
+        const userError = document.getElementById("user-error");
+        const userSuccess = document.getElementById("user-success");
+
+        const imageGrid = document.getElementById("image-grid");
+        const imageTotal = document.getElementById("image-total");
+        const matchConfidenceDisplay = document.getElementById("match-confidence");
+        const loadMoreBtn = document.getElementById("load-more-btn");
+        const searchAgainLink = document.getElementById("search-again-link");
+
+        const step1 = document.getElementById("step-1");
+        const step2 = document.getElementById("step-2");
+
+        const tabs = document.querySelectorAll(".tab");
+        const tabContents = document.querySelectorAll(".tab-content");
+
+        // Tab switching
+        tabs.forEach(tab => {
+            tab.addEventListener("click", () => {
+                const tabName = tab.getAttribute("data-tab");
+                tabs.forEach(t => t.classList.remove("active"));
+                tabContents.forEach(c => c.classList.remove("active"));
+                tab.classList.add("active");
+                document.getElementById(tabName).classList.add("active");
+            });
+        });
+
+        // Admin file handling
+        adminDropzone.addEventListener("click", () => adminFileInput.click());
+        adminDropzone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            adminDropzone.classList.add("dragover");
+        });
+        adminDropzone.addEventListener("dragleave", () => {
+            adminDropzone.classList.remove("dragover");
+        });
+        adminDropzone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            adminDropzone.classList.remove("dragover");
+            adminFiles = Array.from(e.dataTransfer.files);
+            updateAdminFileList();
+        });
+
+        adminFileInput.addEventListener("change", () => {
+            adminFiles = Array.from(adminFileInput.files);
+            updateAdminFileList();
+        });
+
+        function updateAdminFileList() {
+            if (adminFiles.length === 0) {
+                adminFileList.classList.remove("show");
+                adminFileItems.innerHTML = "";
+                return;
+            }
+            adminFileList.classList.add("show");
+            adminFileItems.innerHTML = adminFiles
+                .map((f, i) => `<div class="file-item">${i + 1}. <span class="file-item-name">${f.name}</span></div>`)
+                .join("");
+        }
+
+        adminUploadBtn.addEventListener("click", uploadImages);
+
+        async function uploadImages() {
+            clearBanner(adminError);
+            clearBanner(adminSuccess);
+
+            const adminKey = adminKeyInput.value.trim();
+            if (!adminKey) {
+                showError(adminError, "Admin key is required");
+                return;
+            }
+
+            if (adminFiles.length === 0) {
+                showError(adminError, "Select at least one image");
+                return;
+            }
+
+            adminUploadBtn.disabled = true;
+            adminUploadBtn.textContent = "Uploading…";
+
+            try {
+                const formData = new FormData();
+                adminFiles.forEach(file => formData.append("images", file));
+
+                const response = await fetch(`${API_BASE}/admin/upload`, {
+                    method: "POST",
+                    headers: {
+                        "X-Admin-Key": adminKey,
+                    },
+                    body: formData,
+                });
+
+                if (response.status === 401) {
+                    showError(adminError, "Invalid admin key");
+                } else if (response.status === 202) {
+                    const data = await response.json();
+                    showSuccess(adminSuccess, `${data.accepted} images accepted. Processing faces in background.`);
+                    adminFiles = [];
+                    adminFileInput.value = "";
+                    updateAdminFileList();
+                    adminKeyInput.value = "";
+                } else {
+                    showError(adminError, "Upload failed. Check console.");
+                    console.error("Upload failed:", response.statusText);
+                }
+            } catch (err) {
+                showError(adminError, "Upload failed. Check console.");
+                console.error("Upload error:", err);
+            } finally {
+                adminUploadBtn.disabled = false;
+                adminUploadBtn.textContent = "Upload";
+            }
+        }
+
+        // User file handling
+        userDropzone.addEventListener("click", () => userFileInput.click());
+        userDropzone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            userDropzone.classList.add("dragover");
+        });
+        userDropzone.addEventListener("dragleave", () => {
+            userDropzone.classList.remove("dragover");
+        });
+        userDropzone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            userDropzone.classList.remove("dragover");
+            const files = Array.from(e.dataTransfer.files);
+            if (files.length > 0) {
+                userFile = files[0];
+                updateUserPreview();
+            }
+        });
+
+        userFileInput.addEventListener("change", () => {
+            if (userFileInput.files.length > 0) {
+                userFile = userFileInput.files[0];
+                updateUserPreview();
+            }
+        });
+
+        function updateUserPreview() {
+            if (!userFile) {
+                userPreviewContainer.classList.remove("show");
+                userFindBtn.disabled = true;
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                userPreviewImg.src = e.target.result;
+                userPreviewContainer.classList.add("show");
+                userFindBtn.disabled = false;
+            };
+            reader.readAsDataURL(userFile);
+        }
+
+        userFindBtn.addEventListener("click", authenticateSelfie);
+
+        async function authenticateSelfie() {
+            clearBanner(userError);
+            clearBanner(userSuccess);
+
+            if (!userFile) {
+                showError(userError, "Select a selfie first");
+                return;
+            }
+
+            userFindBtn.disabled = true;
+            userFindBtn.textContent = "Scanning face…";
+
+            try {
+                const formData = new FormData();
+                formData.append("selfie", userFile);
+
+                const response = await fetch(`${API_BASE}/auth/selfie`, {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (response.status === 422) {
+                    const data = await response.json();
+                    if (data.detail.includes("No face")) {
+                        showError(userError, "No face detected. Try a clearer photo.");
+                    } else if (data.detail.includes("exactly one face")) {
+                        showError(userError, "Please provide a photo with exactly one face.");
+                    } else {
+                        showError(userError, data.detail);
+                    }
+                } else if (response.status === 404) {
+                    showError(userError, "No matching photos found for this face.");
+                } else if (response.status === 200) {
+                    const data = await response.json();
+                    userToken = data.token;
+                    matchConfidence = data.match_confidence;
+                    currentPage = 1;
+                    totalImages = 0;
+                    matchConfidenceDisplay.textContent = (matchConfidence * 100).toFixed(1) + "%";
+                    imageGrid.innerHTML = "";
+                    loadMoreBtn.style.display = "none";
+                    showStep2();
+                    await loadGalleryPage(1);
+                } else {
+                    showError(userError, "Authentication failed. Check console.");
+                    console.error("Auth failed:", response.statusText);
+                }
+            } catch (err) {
+                showError(userError, "Authentication failed. Check console.");
+                console.error("Auth error:", err);
+            } finally {
+                userFindBtn.disabled = false;
+                userFindBtn.textContent = "Find my photos";
+            }
+        }
+
+        function showStep2() {
+            step1.style.display = "none";
+            step2.style.display = "block";
+        }
+
+        function showStep1() {
+            step1.style.display = "block";
+            step2.style.display = "none";
+            userToken = null;
+            userFile = null;
+            userFileInput.value = "";
+            userPreviewContainer.classList.remove("show");
+            userFindBtn.disabled = true;
+        }
+
+        searchAgainLink.addEventListener("click", showStep1);
+
+        async function loadGalleryPage(page) {
+            try {
+                const response = await fetch(
+                    `${API_BASE}/images?page=${page}&limit=20`,
+                    {
+                        headers: {
+                            "Authorization": `Bearer ${userToken}`,
+                        },
+                    }
+                );
+
+                if (response.status === 200) {
+                    const data = await response.json();
+                    totalImages = data.total;
+                    imageTotal.textContent = totalImages;
+
+                    data.images.forEach(img => {
+                        const card = document.createElement("div");
+                        card.className = "image-card";
+                        card.innerHTML = `
+                            <img src="${img.url}" alt="Photo" crossorigin="anonymous">
+                            <div class="image-card-overlay">Click to open</div>
+                        `;
+                        card.addEventListener("click", () => {
+                            window.open(img.url, "_blank");
+                        });
+                        imageGrid.appendChild(card);
+                    });
+
+                    currentPage = page;
+                    if (totalImages > currentPage * 20) {
+                        loadMoreBtn.style.display = "block";
+                    } else {
+                        loadMoreBtn.style.display = "none";
+                    }
+                } else if (response.status === 401) {
+                    showError(userError, "Session expired. Search again.");
+                    showStep1();
+                } else {
+                    showError(userError, "Failed to load photos. Check console.");
+                    console.error("Gallery load failed:", response.statusText);
+                }
+            } catch (err) {
+                showError(userError, "Failed to load photos. Check console.");
+                console.error("Gallery error:", err);
+            }
+        }
+
+        loadMoreBtn.addEventListener("click", () => {
+            loadMoreBtn.disabled = true;
+            loadGalleryPage(currentPage + 1);
+            loadMoreBtn.disabled = false;
+        });
+
+        function showError(banner, message) {
+            banner.textContent = message;
+            banner.classList.add("show");
+        }
+
+        function showSuccess(banner, message) {
+            banner.textContent = message;
+            banner.classList.add("show");
+        }
+
+        function clearBanner(banner) {
+            banner.classList.remove("show");
+            banner.textContent = "";
+        }
+    </script>
+</body>
+</html>

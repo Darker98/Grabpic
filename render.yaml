@@ -1,0 +1,66 @@
+services:
+  - type: web
+    name: grabpic-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        sync: false
+      - key: SUPABASE_S3_ENDPOINT
+        sync: false
+      - key: SUPABASE_S3_ACCESS_KEY
+        sync: false
+      - key: SUPABASE_S3_SECRET_KEY
+        sync: false
+      - key: SUPABASE_S3_REGION
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: ADMIN_API_KEY
+        sync: false
+      - key: FACE_SIMILARITY_THRESHOLD
+        value: "0.3"
+      - key: TOKEN_TTL_SECONDS
+        value: "3600"
+      - key: WORKER_NAME
+        value: "api"
+
+  - type: worker
+    name: grabpic-worker
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerCommand: python -m app.worker
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        sync: false
+      - key: SUPABASE_S3_ENDPOINT
+        sync: false
+      - key: SUPABASE_S3_ACCESS_KEY
+        sync: false
+      - key: SUPABASE_S3_SECRET_KEY
+        sync: false
+      - key: SUPABASE_S3_REGION
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: ADMIN_API_KEY
+        sync: false
+      - key: FACE_SIMILARITY_THRESHOLD
+        value: "0.3"
+      - key: TOKEN_TTL_SECONDS
+        value: "3600"
+      - key: WORKER_NAME
+        value: "worker-1"
