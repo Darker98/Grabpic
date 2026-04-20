@@ -13,6 +13,7 @@ from app.models.image import Image as ImageModel
 import app.redis_client as redis_store
 from app.storage import upload_bytes
 from app.schemas.upload import UploadResponse
+from fastapi import Request
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -43,6 +44,7 @@ async def _validate_upload_file(file: UploadFile) -> tuple[bytes, str, str]:
 @router.post("/upload", response_model=UploadResponse, status_code=status.HTTP_202_ACCEPTED)
 @limiter.limit("10/10minutes")
 async def upload_images(
+    request: Request,
     images: list[UploadFile] = File(...),
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
     session: AsyncSession = Depends(get_session),

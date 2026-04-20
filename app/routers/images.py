@@ -13,6 +13,7 @@ from app.models.image_face_mapping import ImageFaceMapping
 import app.redis_client as redis_store
 from app.schemas.images import ImageItem, ImageListResponse
 from app import storage
+from fastapi import Request
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -22,6 +23,7 @@ limiter = Limiter(key_func=get_remote_address)
 @router.get("", response_model=ImageListResponse)
 @limiter.limit("10/10minutes")
 async def list_images(
+    request: Request,
     authorization: str | None = Header(None),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
